@@ -31,17 +31,35 @@ export interface TokenResponse {
 
 // Get API URL from environment variable or use proxy for development
 const getApiBaseURL = () => {
-  // In production, use the environment variable
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // In production, use the environment variable if set and valid
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl && apiUrl.trim()) {
+    const trimmed = apiUrl.trim().replace(/\/$/, '');
+    // Don't use localhost URLs in production
+    if (import.meta.env.PROD && trimmed.includes('localhost')) {
+      console.warn('VITE_API_URL points to localhost in production, using /api instead');
+      return '/api';
+    }
+    // Validate it's a proper URL or relative path
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+      return trimmed;
+    }
   }
-  // In development, use the Vite proxy
+  // Default: use relative /api path (works for both dev proxy and Vercel production)
   return '/api';
 };
 
+// Get base URL and validate it
+const baseURL = getApiBaseURL();
+
+// Log for debugging (remove in production if needed)
+if (import.meta.env.DEV) {
+  console.log('API Base URL:', baseURL);
+}
+
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: getApiBaseURL(),
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
