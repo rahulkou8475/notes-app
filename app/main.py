@@ -18,6 +18,12 @@ cors_origins = [
 # Add production frontend URL from environment variable if set
 if os.getenv("FRONTEND_URL"):
     cors_origins.append(os.getenv("FRONTEND_URL"))
+# Add Vercel URLs automatically
+if os.getenv("VERCEL_URL"):
+    cors_origins.append(f"https://{os.getenv('VERCEL_URL')}")
+# In production on Vercel, allow all origins for simplicity
+if os.getenv("VERCEL"):
+    cors_origins = ["*"]  # Allow all in Vercel production
 
 app.add_middleware(
     CORSMiddleware,
